@@ -20,6 +20,7 @@ module.exports = function(mongoose, cache) {
     const isCount = ['count', 'countDocuments', 'estimatedDocumentCount'].includes(this.op);
     const isLean = this._mongooseOptions.lean;
     const model = this.model.modelName;
+    const isPopulate = this._mongooseOptions.populate;
 
     return new Promise((resolve, reject) => {
       cache.get(key, (err, cachedResults) => { //eslint-disable-line handle-callback-err
@@ -35,6 +36,8 @@ module.exports = function(mongoose, cache) {
               cachedResults.map(hydrateModel(constructor)) :
               hydrateModel(constructor)(cachedResults);
           }
+
+          console.log('[isPopulate]', isPopulate, Object.keys(isPopulate));
 
           callback(null, cachedResults);
           return resolve(cachedResults);

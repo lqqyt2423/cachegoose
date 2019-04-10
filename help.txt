@@ -1,0 +1,28 @@
+Article.find({}).populate('author').cache();
+[isPopulate] { author:
+   { path: 'author',
+     match: undefined,
+     select: undefined,
+     options: undefined,
+     model: undefined,
+     _docs: {} } }
+
+
+Article.find({}).populate({ path: 'author', model: 'Author' }).cache();
+[isPopulate] { author:
+   { path: 'author',
+     match: undefined,
+     select: undefined,
+     options: undefined,
+     model: 'Author',
+     _docs: {} } }
+
+
+Article.find({}).populate([{ path: 'author', model: 'Author' }]).cache();
+[isPopulate] { author:
+   { path: 'author',
+     match: undefined,
+     select: undefined,
+     options: undefined,
+     model: 'Author',
+     _docs: {} } }
