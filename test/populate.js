@@ -49,19 +49,34 @@ describe('cachegoose populate', () => {
   });
 
   it('should work when engine is redis', async () => {
-    const authors = await Author.find({}).cache();
+    const fn = () => { return Author.find({}).cache(); };
+    const authors = await fn();
     authors.length.should.equal(2);
-    const cacheAuthors = await Author.find({}).cache();
+    const cacheAuthors = await fn();
     cacheAuthors.length.should.equal(2);
     JSON.stringify(authors).should.equal(JSON.stringify(cacheAuthors));
   });
 
-  it ('should work when use populate', async () => {
-    const articles = await Article.find({}).populate([{ path: 'author', model: 'Author' }]).cache();
-    console.log(JSON.stringify(articles));
-    const cacheArticles = await Article.find({}).populate([{ path: 'author', model: 'Author' }]).cache();
-    console.log(JSON.stringify(cacheArticles));
-    JSON.stringify(articles).should.equal(JSON.stringify(cacheArticles));
+  it('should return a Mongoose model from cached and non-cached results', async () => {
+    const fn = () => { return Article.find({}).populate('author').cache(); };
+    const articles = await fn();
+    const cacheArticles = await fn();
+    articles[0].constructor.name.should.equal('model');
+    cacheArticles[0].constructor.name.should.equal('model');
+  });
+
+  it('should work when use populate', async () => {
+    const fn = () => { return Article.find({}).populate('author').cache(); };
+    const articles = await fn();
+    const cacheArticles = await fn();
+
+    // TODO: 对比两个对象/数组的方法，排除对象内字段顺序的影响
+    articles.forEach((doc, index) => {
+      const cacheDoc = cacheArticles[index];
+      doc.id.should.equal(cacheDoc.id);
+      doc.title.should.equal(cacheDoc.title);
+      JSON.stringify(doc.author).should.equal(JSON.stringify(cacheDoc.author));
+    });
   });
 });
 

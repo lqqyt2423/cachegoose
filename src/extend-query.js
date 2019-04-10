@@ -1,6 +1,7 @@
 'use strict';
 
 const generateKey = require('./generate-key');
+const handleQueryPopulate = require('./extend-query-populate');
 
 module.exports = function(mongoose, cache) {
   const exec = mongoose.Query.prototype.exec;
@@ -25,20 +26,23 @@ module.exports = function(mongoose, cache) {
     return new Promise((resolve, reject) => {
       cache.get(key, (err, cachedResults) => { //eslint-disable-line handle-callback-err
         if (cachedResults != null) {
-          if (isCount) {
+          if (isCount || isLean) {
             callback(null, cachedResults);
             return resolve(cachedResults);
           }
 
-          if (!isLean) {
+          if (!isPopulate) {
             const constructor = mongoose.model(model);
             cachedResults = Array.isArray(cachedResults) ?
               cachedResults.map(hydrateModel(constructor)) :
               hydrateModel(constructor)(cachedResults);
+
+            callback(null, cachedResults);
+            return resolve(cachedResults);
           }
 
-          console.log('[isPopulate]', isPopulate, Object.keys(isPopulate));
-
+          // is populate
+          cachedResults = handleQueryPopulate(cachedResults, mongoose, model, isPopulate);
           callback(null, cachedResults);
           return resolve(cachedResults);
         }
