@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const cachegoose = require('../out');
 const Schema = mongoose.Schema;
 
-// mongoose.set('debug', true);
+mongoose.set('debug', true);
 
 let db;
 let Article;
@@ -29,10 +29,15 @@ describe('cachegoose populate', () => {
       title: String,
       user: { type: 'ObjectId', ref: 'User' },
       comments: [{ type: 'ObjectId', ref: 'Comment' }],
+      info: {
+        category: String,
+        author: { type: 'ObjectId', ref: 'User' },
+      },
     });
     const UserSchema = new Schema({
       name: String,
     });
+    UserSchema.methods.getName = function() { return this.name; };
     const CommentSchema = new Schema({
       content: String,
       user: { type: 'ObjectId', ref: 'User' },
@@ -75,7 +80,7 @@ describe('cachegoose populate', () => {
   });
 
   it('should return a Mongoose model from cached and non-cached results when populate mult fields', async () => {
-    const fn = () => { return Article.find({}).populate('user comments').cache(); };
+    const fn = () => { return Article.find({}).populate('user comments info.author').cache(); };
     const articles = await fn();
     const cacheArticles = await fn();
     articles[0].constructor.name.should.equal('model');
@@ -84,6 +89,8 @@ describe('cachegoose populate', () => {
     cacheArticles[0].user.constructor.name.should.equal('model');
     articles[0].comments[0].constructor.name.should.equal('model');
     cacheArticles[0].comments[0].constructor.name.should.equal('model');
+    articles[0].info.author.constructor.name.should.equal('model');
+    cacheArticles[0].info.author.constructor.name.should.equal('model');
   });
 
   it('should work when use populate', async () => {
@@ -155,6 +162,33 @@ describe('cachegoose populate', () => {
       ]);
     });
   });
+
+  it('should work when populate nested field', async () => {
+    const testEqual = (articles, cacheArticles) => {
+      articles.forEach((doc, index) => {
+        const cacheDoc = cacheArticles[index];
+        doc.id.should.equal(cacheDoc.id);
+        doc.title.should.equal(cacheDoc.title);
+        doc.info.category.should.equal(cacheDoc.info.category);
+        doc.info.author.id.should.equal(cacheDoc.info.author.id);
+        doc.info.author.name.should.equal(cacheDoc.info.author.name);
+        doc.info.author.getName().should.equal(doc.info.author.name);
+        cacheDoc.info.author.getName().should.equal(cacheDoc.info.author.name);
+      });
+    };
+
+    const testFn = async (fn) => {
+      const articles = await fn();
+      const cacheArticles = await fn();
+      testEqual(articles, cacheArticles);
+      await new Promise((resolve) => {
+        cachegoose.clearCache(null, resolve);
+      });
+    };
+
+    await testFn(() => { return Article.find({}).populate('info.author').cache(); });
+    await testFn(() => { return Article.find({}).populate('user comments info.author').cache(); });
+  });
 });
 
 
@@ -165,6 +199,22 @@ async function generate() {
   const comment2 = await Comment.create({ content: 'two', user: user2._id });
   const comment3 = await Comment.create({ content: 'three', user: user1._id });
   const comment4 = await Comment.create({ content: 'four', user: user2._id });
-  await Article.create({ title: 'first', user: user1._id, comments: [comment1._id, comment2._id] });
-  await Article.create({ title: 'second', user: user2._id, comments: [comment3._id, comment4._id] });
+  await Article.create({
+    title: 'first',
+    user: user1._id,
+    comments: [comment1._id, comment2._id],
+    info: {
+      category: 'one',
+      author: user1._id,
+    },
+  });
+  await Article.create({
+    title: 'second',
+    user: user2._id,
+    comments: [comment3._id, comment4._id],
+    info: {
+      category: 'two',
+      author: user2._id,
+    },
+  });
 }

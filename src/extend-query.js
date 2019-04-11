@@ -42,7 +42,11 @@ module.exports = function(mongoose, cache) {
           }
 
           // is populate
-          cachedResults = handleQueryPopulate(cachedResults, mongoose, model, isPopulate);
+          try {
+            cachedResults = handleQueryPopulate(cachedResults, mongoose, model, isPopulate);
+          } catch (e) {
+            console.error(e);
+          }
           callback(null, cachedResults);
           return resolve(cachedResults);
         }
