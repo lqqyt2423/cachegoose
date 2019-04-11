@@ -19,17 +19,34 @@ function handleQueryPopulate(data, mongoose, modelName, populateOption) {
   const pathToModelMap = subPaths.reduce((_map, path) => {
     let refModel;
     let _modelName = populateOption[path].model;
+
+    // 从 schema 中尝试提取 model name
     if (!_modelName) {
-      // console.log(schema.path(path));
-      // 从 schema 中尝试提取 model name
-      _modelName = ((schema.path(path) || {}).options || {}).ref;
+      const _schemaType = schema.path(path);
+      const _pathType = schema.pathType(path);
+      // console.log('path', path);
+      // console.log('_schemaType', _schemaType);
+      // console.log('_pathType', _pathType);
+
+      if (_pathType === 'real') {
+        // 正常的 schema
+        if (_schemaType.options && _schemaType.options.ref) {
+          _modelName = _schemaType.options.ref;
+        }
+        // SchemaArray
+        if (!_modelName && _schemaType.caster && _schemaType.caster.options && _schemaType.caster.options.ref) {
+          _modelName = _schemaType.caster.options.ref;
+        }
+      }
     }
-    _modelName && (refModel = mongoose.model(_modelName));
-    refModel && (_map[path] = refModel);
+
+    if (_modelName) refModel = mongoose.model(_modelName);
+    if (refModel) _map[path] = refModel;
     return _map;
   }, {});
   subPaths = Object.keys(pathToModelMap);
 
+  // hydrate doc and populated doc
   const handleDoc = (doc) => {
     const _doc = model.hydrate(doc);
     subPaths.forEach((path) => {

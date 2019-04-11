@@ -26,3 +26,20 @@ Article.find({}).populate([{ path: 'author', model: 'Author' }]).cache();
      options: undefined,
      model: 'Author',
      _docs: {} } }
+
+
+Article.find({}).populate('user comments').cache();
+[isPopulate] { user:
+   { path: 'user',
+     match: undefined,
+     select: undefined,
+     options: undefined,
+     model: undefined,
+     _docs: {} },
+  comments:
+   { path: 'comments',
+     match: undefined,
+     select: undefined,
+     options: undefined,
+     model: undefined,
+     _docs: {} } }
