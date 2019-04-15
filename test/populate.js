@@ -55,6 +55,7 @@ describe('cachegoose populate', () => {
     Promise.all([
       User.remove(),
       Article.remove(),
+      Comment.remove(),
     ]).then(() => {
       cachegoose.clearCache(null, done);
     });
