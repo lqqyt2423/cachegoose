@@ -153,13 +153,13 @@ describe('cachegoose populate', () => {
       return Article.find({}).populate([
         { path: 'user', model: 'User' },
         { path: 'comments', model: 'Comment' }
-      ]);
+      ]).cache();
     });
     await testFn(() => {
       return Article.find({}).populate([
         { path: 'user' },
         { path: 'comments' }
-      ]);
+      ]).cache();
     });
   });
 

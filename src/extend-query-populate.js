@@ -49,13 +49,29 @@ function handleQueryPopulate(data, mongoose, modelName, populateOption) {
   // hydrate doc and populated doc
   const handleDoc = (doc) => {
     const _doc = model.hydrate(doc);
-    subPaths.forEach((path) => {
-      const val = doc[path];
-      const refModel = pathToModelMap[path];
-      _doc[path] = Array.isArray(val) ?
-        val.map(refModel.hydrate) :
+
+    // replace special field
+    const replaceField = (source, target, path, refModel) => {
+      if (!source || !target) return;
+      if (!refModel) refModel = pathToModelMap[path];
+
+      // handle nested field
+      if (path.indexOf('.') > -1) {
+        const arr = path.split('.');
+        const filed = arr.shift();
+        path = arr.join('.');
+        return replaceField(source[filed], target[filed], path, refModel);
+      }
+      const val = source[path];
+      target[path] = Array.isArray(val) ?
+        val.map(refModel.hydrate.bind(refModel)) :
         refModel.hydrate(val);
+    };
+
+    subPaths.forEach((path) => {
+      return replaceField(doc, _doc, path);
     });
+
     return _doc;
   };
 
