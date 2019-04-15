@@ -1,6 +1,6 @@
 {
-  "name": "cachegoose",
-  "version": "8.0.0",
+  "name": "@liqiqiang/cachegoose",
+  "version": "1.0.0",
   "description": "Mongoose caching that actually works.",
   "main": "index.js",
   "directories": {
@@ -33,7 +33,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/boblauer/cachegoose.git"
+    "url": "git@github.com:lqqyt2423/cachegoose.git"
   },
   "keywords": [
     "cache",
@@ -44,10 +44,10 @@
     "store",
     "ttl"
   ],
-  "author": "Bob Lauer <rlauer@gmail.com>",
+  "author": "Li Qiang <974923609@qq.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/boblauer/cachegoose/issues"
+    "url": "https://github.com/lqqyt2423/cachegoose/issues"
   },
-  "homepage": "https://github.com/boblauer/cachegoose"
+  "homepage": "https://github.com/lqqyt2423/cachegoose"
 }

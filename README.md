@@ -14,6 +14,12 @@ Important:
 If you are using Mongoose 4.x or below, you need to use version 4.1 of this library.
 ```
 
+## Install ##
+
+```
+npm install @liqiqiang/cachegoose --save
+```
+
 ## Usage ##
 
 ```javascript
@@ -92,7 +98,9 @@ If you call `cachegoose.clearCache(null, cb)` without passing a cache key as the
 
 ## Caching populated documents ##
 
-When a document is returned from the cache, cachegoose will [hydrate](http://mongoosejs.com/docs/api.html#model_Model.hydrate) it, which initializes it's virtuals/methods. Hydrating a populated document will discard any populated fields (see [Automattic/mongoose#4727](https://github.com/Automattic/mongoose/issues/4727)). To cache populated documents without losing child documents, you must use `.lean()`, however if you do this you will not be able to use any virtuals/methods (it will be a plain object).
+> When a document is returned from the cache, cachegoose will [hydrate](http://mongoosejs.com/docs/api.html#model_Model.hydrate) it, which initializes it's virtuals/methods. Hydrating a populated document will discard any populated fields (see [Automattic/mongoose#4727](https://github.com/Automattic/mongoose/issues/4727)). To cache populated documents without losing child documents, you must use `.lean()`, however if you do this you will not be able to use any virtuals/methods (it will be a plain object).
+
+Already support populate.
 
 ## Test ##
 npm test
