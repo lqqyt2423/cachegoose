@@ -6,7 +6,7 @@ const mongoose = require('mongoose');
 const cachegoose = require('../out');
 const Schema = mongoose.Schema;
 
-mongoose.set('debug', true);
+// mongoose.set('debug', true);
 
 let db;
 let Article;
@@ -188,6 +188,54 @@ describe('cachegoose populate', () => {
 
     await testFn(() => { return Article.find({}).populate('info.author').cache(); });
     await testFn(() => { return Article.find({}).populate('user comments info.author').cache(); });
+  });
+
+  it('should work when sub populate', async () => {
+    const testEqual = (articles, cacheArticles) => {
+      articles.forEach((doc, index) => {
+        const cacheDoc = cacheArticles[index];
+        doc.id.should.equal(cacheDoc.id);
+        doc.title.should.equal(cacheDoc.title);
+        doc.comments.forEach((comment, i) => {
+          const chcheComment = cacheDoc.comments[i];
+          comment.id.should.equal(chcheComment.id);
+          comment.content.should.equal(chcheComment.content);
+          comment.user.id.should.equal(chcheComment.user.id);
+          comment.user.name.should.equal(chcheComment.user.name);
+          comment.user.getName().should.equal(comment.user.name);
+          chcheComment.user.getName().should.equal(chcheComment.user.name);
+        });
+      });
+    };
+
+    const testFn = async (fn) => {
+      const articles = await fn();
+      const cacheArticles = await fn();
+      testEqual(articles, cacheArticles);
+
+      // test Mongoose model
+      articles[0].comments[0].constructor.name.should.equal('model');
+      cacheArticles[0].comments[0].constructor.name.should.equal('model');
+      articles[0].comments[0].user.constructor.name.should.equal('model');
+      cacheArticles[0].comments[0].user.constructor.name.should.equal('model');
+
+      await new Promise((resolve) => {
+        cachegoose.clearCache(null, resolve);
+      });
+    };
+
+    await testFn(() => {
+      return Article.find({}).populate({
+        path: 'comments',
+        populate: { path: 'user' },
+      }).cache();
+    });
+    await testFn(() => {
+      return Article.find({}).populate('user').populate({
+        path: 'comments',
+        populate: { path: 'user' },
+      }).cache();
+    });
   });
 });
 

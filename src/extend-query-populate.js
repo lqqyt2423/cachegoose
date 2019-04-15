@@ -13,12 +13,24 @@ function handleQueryPopulate(data, mongoose, modelName, populateOption) {
   const model = mongoose.model(modelName);
   const schema = model.schema;
 
+  // 字段至 sub populate 的关联
+  const pathToSubPopulateMap = {};
+
   // 需要 populate 的字段列表
   let subPaths = Object.keys(populateOption);
   // 字段至关联 model 的映射
   const pathToModelMap = subPaths.reduce((_map, path) => {
     let refModel;
     let _modelName = populateOption[path].model;
+
+    // sub populate
+    if (populateOption[path].populate && populateOption[path].populate.length) {
+      const subPopulateOption = populateOption[path].populate.reduce((obj, opt) => {
+        obj[opt.path] = opt;
+        return obj;
+      }, {});
+      pathToSubPopulateMap[path] = subPopulateOption;
+    }
 
     // 从 schema 中尝试提取 model name
     if (!_modelName) {
@@ -54,6 +66,12 @@ function handleQueryPopulate(data, mongoose, modelName, populateOption) {
     const replaceField = (source, target, path, refModel) => {
       if (!source || !target) return;
       if (!refModel) refModel = pathToModelMap[path];
+
+      // 如果有 sub populate，重新调用 handleQueryPopulate
+      if (path in pathToSubPopulateMap) {
+        target[path] = handleQueryPopulate(source[path], mongoose, refModel.modelName, pathToSubPopulateMap[path]);
+        return;
+      }
 
       // handle nested field
       if (path.indexOf('.') > -1) {
